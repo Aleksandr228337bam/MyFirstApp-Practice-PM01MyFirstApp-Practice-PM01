@@ -59,10 +59,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Cursor cursor = db.query(TABLE_TASKS, null, null, null, null, null, COLUMN_TITLE + " ASC");
         if (cursor.moveToFirst()) {
             do {
-                Task task = new Task();              // ← строка 62 (у вас)
-                task.setId(cursor.getInt(0));         // ← 63
-                task.setTitle(cursor.getString(1));    // ← 64
-                task.setDescription(cursor.getString(2)); // ← 65
+                Task task = new Task();
+                task.setId(cursor.getInt(0));
+                task.setTitle(cursor.getString(1));
+                task.setDescription(cursor.getString(2));
                 tasks.add(task);
             } while (cursor.moveToNext());
         }
@@ -88,23 +88,28 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return result > 0;
     }
 
-    // Самостоятельное задание: поиск по названию
     public List<Task> searchTasks(String query) {
         List<Task> tasks = new ArrayList<>();
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(TABLE_TASKS, null, COLUMN_TITLE + " LIKE ?",
-                new String[]{"%" + query + "%"}, null, null, COLUMN_TITLE + " ASC");
-        if (cursor.moveToFirst()) {
-            do {
-                Task task = new Task();
-                task.setId(cursor.getInt(0));
-                task.setTitle(cursor.getString(1));
-                task.setDescription(cursor.getString(2));
-                tasks.add(task);
-            } while (cursor.moveToNext());
+        try {
+            SQLiteDatabase db = this.getReadableDatabase();
+            String selection = COLUMN_TITLE + " LIKE ?";
+            String[] selectionArgs = {"%" + query + "%"};
+            Cursor cursor = db.query(TABLE_TASKS, null, selection, selectionArgs, null, null, null);
+
+            if (cursor.moveToFirst()) {
+                do {
+                    Task task = new Task();
+                    task.setId(cursor.getInt(0));
+                    task.setTitle(cursor.getString(1));
+                    task.setDescription(cursor.getString(2));
+                    tasks.add(task);
+                } while (cursor.moveToNext());
+            }
+            cursor.close();
+            db.close();
+        } catch (Exception e) {
+            android.util.Log.e("DatabaseHelper", "Search error: " + e.getMessage());
         }
-        cursor.close();
-        db.close();
         return tasks;
     }
 }

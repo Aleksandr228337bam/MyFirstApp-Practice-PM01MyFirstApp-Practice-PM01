@@ -1,12 +1,16 @@
 package com.example.myfirstapp;
 
+import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,131 +19,159 @@ public class MainActivity extends AppCompatActivity {
 
     DatabaseHelper dbHelper;
     ListView listViewTasks;
-    ArrayAdapter<String> adapter;
+    ArrayAdapter<String> tasksAdapter;
     List<Task> tasks = new ArrayList<>();
     int selectedTaskId = -1;
-
-    EditText etTitle, etDesc, etSearch;
-    Button btnAdd, btnRefresh, btnDelete, btnEdit;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        dbHelper = new DatabaseHelper(this);
+        // НАВИГАЦИЯ lvScreens
+        @SuppressLint({"MissingInflatedId", "LocalSuppress"})
+        ListView lvScreens = findViewById(R.id.lvScreens);
+        String[] screens = {
+                "Открыть профиль",
+                "Открыть экран с расчётом",
+                "Открыть экран настроек"
+        };
+        ArrayAdapter<String> navAdapter = new ArrayAdapter<>(
+                this, android.R.layout.simple_list_item_1, screens);
+        lvScreens.setAdapter(navAdapter);
 
-        etTitle = findViewById(R.id.etTitle);
-        etDesc = findViewById(R.id.etDesc);
-        etSearch = findViewById(R.id.etSearch);
+        lvScreens.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                if (position == 0) {
+                    startActivity(new Intent(MainActivity.this, ProfileActivity.class));
+                } else if (position == 1) {
+                    startActivity(new Intent(MainActivity.this, CalcActivity.class));
+                } else if (position == 2) {
+                    startActivity(new Intent(MainActivity.this, SettingsActivity.class));
+                }
+            }
+        });
+
+        // ИНИЦИАЛИЗАЦИЯ SQLite
+        dbHelper = new DatabaseHelper(this);
         listViewTasks = findViewById(R.id.listViewTasks);
 
-        btnAdd = findViewById(R.id.btnAdd);
-        btnRefresh = findViewById(R.id.btnRefresh);
-        btnDelete = findViewById(R.id.btnDeleteSelected);
-        btnEdit = findViewById(R.id.btnEdit);
+        Button btnAdd = findViewById(R.id.btnAdd);
+        btnAdd.setOnClickListener(v -> addTask());
 
-        // Добавить задачу
-        btnAdd.setOnClickListener(v -> {
-            String title = etTitle.getText().toString().trim();
-            String desc = etDesc.getText().toString().trim();
-            if (!title.isEmpty() && !desc.isEmpty()) {
-                if (dbHelper.addTask(title, desc)) {
-                    Toast.makeText(this, "Задача добавлена", Toast.LENGTH_SHORT).show();
-                    refreshList();
-                    etTitle.setText("");
-                    etDesc.setText("");
+        findViewById(R.id.btnRefresh).setOnClickListener(v -> refreshTasksList());
+
+        // НОВЫЙ ПОИСК
+        EditText etSearch = findViewById(R.id.etSearch);
+        findViewById(R.id.btnSearch).setOnClickListener(v -> {
+            String query = etSearch.getText().toString().trim();
+            if (!query.isEmpty()) {
+                try {
+                    tasks.clear();
+                    tasks.addAll(dbHelper.searchTasks(query));
+                    refreshTasksList();
+                    Toast.makeText(this, "🔍 Найдено: " + tasks.size() + " задач", Toast.LENGTH_SHORT).show();
+                } catch (Exception e) {
+                    Toast.makeText(this, "❌ Ошибка поиска: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 }
             } else {
-                Toast.makeText(this, "Заполните все поля", Toast.LENGTH_SHORT).show();
+                refreshTasksList();
             }
         });
 
-        // Обновить список
-        btnRefresh.setOnClickListener(v -> refreshList());
+        // Клик по задаче → DetailsActivity
+        listViewTasks.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                selectedTaskId = tasks.get(position).getId();
+                Intent intent = new Intent(MainActivity.this, DetailsActivity.class);
+                intent.putExtra("TASK_ID", selectedTaskId);
+                startActivityForResult(intent, 1);
 
-        // Выбор задачи из списка
-        listViewTasks.setOnItemClickListener((parent, view, position, id) -> {
-            selectedTaskId = tasks.get(position).getId();
-            etTitle.setText(tasks.get(position).getTitle());
-            etDesc.setText(tasks.get(position).getDescription());
-            Toast.makeText(this, "Выбрана задача ID: " + selectedTaskId, Toast.LENGTH_SHORT).show();
+                view.setBackgroundColor(getResources().getColor(android.R.color.holo_blue_light));
+                Toast.makeText(MainActivity.this, "📋 Детали задачи #" + selectedTaskId, Toast.LENGTH_SHORT).show();
+            }
         });
 
-        // Удалить выбранную
+        Button btnDelete = findViewById(R.id.btnDeleteSelected);
         btnDelete.setOnClickListener(v -> {
             if (selectedTaskId != -1) {
-                if (dbHelper.deleteTask(selectedTaskId)) {
-                    Toast.makeText(this, "Задача удалена", Toast.LENGTH_SHORT).show();
-                    refreshList();
-                    etTitle.setText("");
-                    etDesc.setText("");
-                    selectedTaskId = -1;
-                }
-            } else {
-                Toast.makeText(this, "Выберите задачу", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        // Редактировать выбранную (самостоятельное задание)
-        btnEdit.setOnClickListener(v -> {
-            if (selectedTaskId != -1) {
-                String title = etTitle.getText().toString().trim();
-                String desc = etDesc.getText().toString().trim();
-                if (!title.isEmpty() && !desc.isEmpty()) {
-                    Task task = new Task();
-                    task.setId(selectedTaskId);
-                    task.setTitle(title);
-                    task.setDescription(desc);
-                    if (dbHelper.updateTask(task)) {
-                        Toast.makeText(this, "Задача обновлена", Toast.LENGTH_SHORT).show();
-                        refreshList();
-                        etTitle.setText("");
-                        etDesc.setText("");
+                try {
+                    if (dbHelper.deleteTask(selectedTaskId)) {
+                        Toast.makeText(this, "🗑️ Задача #" + selectedTaskId + " удалена!", Toast.LENGTH_SHORT).show();
+                        refreshTasksList();
                         selectedTaskId = -1;
+                    } else {
+                        Toast.makeText(this, "❌ Ошибка удаления из БД", Toast.LENGTH_SHORT).show();
                     }
-                } else {
-                    Toast.makeText(this, "Заполните поля", Toast.LENGTH_SHORT).show();
+                } catch (Exception e) {
+                    Toast.makeText(this, "💥 Ошибка БД: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 }
             } else {
-                Toast.makeText(this, "Выберите задачу", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "⚠️ Выберите задачу кликом!", Toast.LENGTH_SHORT).show();
             }
         });
 
-        // Поиск (самостоятельное задание)
-        etSearch.addTextChangedListener(new android.text.TextWatcher() {
-            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
-                searchTasks(s.toString());
+        refreshTasksList();
+    }
+
+    private void addTask() {
+        try {
+            EditText etTitle = findViewById(R.id.etTitle);
+            EditText etDesc = findViewById(R.id.etDesc);
+
+            String title = etTitle.getText().toString().trim();
+            String desc = etDesc.getText().toString().trim();
+
+            if (title.length() < 3) {
+                Toast.makeText(this, "⚠️ Название слишком короткое (минимум 3 символа)", Toast.LENGTH_SHORT).show();
+                return;
             }
-            @Override public void afterTextChanged(android.text.Editable s) {}
-        });
+            if (desc.isEmpty()) {
+                Toast.makeText(this, "⚠️ Добавьте описание!", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
-        refreshList();
+            if (dbHelper.addTask(title, desc)) {
+                Toast.makeText(this, "✅ Задача '" + title + "' добавлена!", Toast.LENGTH_SHORT).show();
+                refreshTasksList();
+                etTitle.setText("");
+                etDesc.setText("");
+            } else {
+                Toast.makeText(this, "❌ Не удалось сохранить в БД", Toast.LENGTH_LONG).show();
+            }
+        } catch (Exception e) {
+            Toast.makeText(this, "💥 Критическая ошибка: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
     }
 
-    private void refreshList() {
-        tasks.clear();
-        tasks.addAll(dbHelper.getAllTasks());
-        updateAdapter();
-    }
-
-    private void searchTasks(String query) {
-        if (query.isEmpty()) {
-            refreshList();
-        } else {
+    private void refreshTasksList() {
+        try {
             tasks.clear();
-            tasks.addAll(dbHelper.searchTasks(query));
-            updateAdapter();
+            tasks.addAll(dbHelper.getAllTasks());
+
+            List<String> displayList = new ArrayList<>();
+            for (Task task : tasks) {
+                displayList.add("#" + task.getId() + " " + task.getTitle() + "\n " + task.getDescription());
+            }
+
+            tasksAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_activated_1, displayList);
+            listViewTasks.setAdapter(tasksAdapter);
+            tasksAdapter.notifyDataSetChanged();
+
+            Toast.makeText(this, "📊 Всего задач: " + tasks.size(), Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Toast.makeText(this, "❌ Ошибка загрузки списка: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
-    private void updateAdapter() {
-        List<String> taskTitles = new ArrayList<>();
-        for (Task task : tasks) {
-            taskTitles.add(task.getTitle() + " (" + task.getDescription() + ")");
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1 && resultCode == RESULT_OK) {
+            refreshTasksList();
+            Toast.makeText(this, "🔄 Список обновлен!", Toast.LENGTH_SHORT).show();
         }
-        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, taskTitles);
-        listViewTasks.setAdapter(adapter);
     }
 }
