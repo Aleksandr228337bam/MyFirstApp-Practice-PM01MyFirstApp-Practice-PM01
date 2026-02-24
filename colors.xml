@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="#F5F5F5">
+
+    <!-- Заголовок с градиентом -->
+    <LinearLayout
+        android:background="@drawable/gradient_header"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:elevation="8dp">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📝 Детали задачи"
+            android:textSize="28sp"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-medium"/>
+    </LinearLayout>
+
+    <!-- Карточка задачи -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/taskCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="12dp"
+        app:strokeColor="#E0E0E0"
+        app:strokeWidth="1dp">  <!-- ← ИСПРАВЛЕНО: убран комментарий после тега -->
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="24dp">
+
+            <TextView
+                android:id="@+id/tvTaskTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Название задачи"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:textColor="#212121"
+                android:fontFamily="sans-serif-black"/>
+
+            <TextView
+                android:id="@+id/tvTaskDesc"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Описание"
+                android:textSize="16sp"
+                android:textColor="#666666"
+                android:layout_marginTop="8dp"
+                android:lineSpacingExtra="4dp"/>
+
+            <TextView
+                android:id="@+id/tvTaskId"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ID: #"
+                android:textSize="14sp"
+                android:textColor="#FF5722"
+                android:layout_marginTop="12dp"/>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Кнопки с ripple-эффектами -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="78dp"
+        android:layout_marginTop="24dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnEditTask"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_marginEnd="12dp"
+            android:layout_weight="1"
+            android:text="✏️ Редактировать"
+            app:strokeColor="#4CAF50"
+            android:foreground="?attr/selectableItemBackground" />
+
+        <Button
+            android:id="@+id/btnDeleteTask"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_weight="1"
+            android:backgroundTint="#FF5722"
+            android:text="🗑️ Удалить"
+            android:foreground="?attr/selectableItemBackground" />
+    </LinearLayout>
+</LinearLayout>
