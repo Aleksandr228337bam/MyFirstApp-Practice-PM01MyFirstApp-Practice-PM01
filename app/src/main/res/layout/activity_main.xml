@@ -20,6 +20,7 @@
         <ListView
             android:id="@+id/lvScreens"
             android:layout_width="match_parent"
+            android:layout_height="211dp"
             android:layout_marginBottom="32dp" />
 
         <TextView
@@ -43,6 +44,22 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             android:hint="Описание задачи" />
+
+        <EditText
+            android:id="@+id/etSearch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:hint="Поиск по названию" />
+
+        <Button
+            android:id="@+id/btnSearch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:backgroundTint="#2196F3"
+            android:text="🔍 Найти задачи"
+            android:textColor="#FFFFFF" />
 
         <LinearLayout
             android:layout_width="match_parent"
