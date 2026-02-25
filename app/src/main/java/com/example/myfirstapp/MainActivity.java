@@ -34,8 +34,6 @@ public class MainActivity extends AppCompatActivity {
         String[] screens = {
                 "Открыть профиль",
                 "Открыть экран с расчётом",
-                "Открыть экран настроек" ,
-                "Каталог картинок"
         };
         ArrayAdapter<String> navAdapter = new ArrayAdapter<>(
                 this, android.R.layout.simple_list_item_1, screens);
@@ -50,9 +48,6 @@ public class MainActivity extends AppCompatActivity {
                     startActivity(new Intent(MainActivity.this, CalcActivity.class));
                 } else if (position == 2) {
                     startActivity(new Intent(MainActivity.this, SettingsActivity.class));
-                }
-                else if (position == 3) {
-                    startActivity(new Intent(MainActivity.this, GalleryActivity.class));
                 }
             }
         });
@@ -92,7 +87,6 @@ public class MainActivity extends AppCompatActivity {
                 Intent intent = new Intent(MainActivity.this, DetailsActivity.class);
                 intent.putExtra("TASK_ID", selectedTaskId);
                 startActivityForResult(intent, 1);
-
 
                 view.setBackgroundColor(getResources().getColor(android.R.color.holo_blue_light));
                 Toast.makeText(MainActivity.this, "📋 Детали задачи #" + selectedTaskId, Toast.LENGTH_SHORT).show();

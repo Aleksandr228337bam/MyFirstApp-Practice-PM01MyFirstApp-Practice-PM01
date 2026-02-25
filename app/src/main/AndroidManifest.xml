@@ -11,12 +11,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MyFirstApp">
         <activity
-            android:name=".GalleryDetailsActivity"
-            android:exported="false" />
-        <activity
-            android:name=".GalleryActivity"
-            android:exported="false" />
-        <activity
             android:name=".DetailsActivity"
             android:exported="false"
             android:label="@string/title_activity_details"
