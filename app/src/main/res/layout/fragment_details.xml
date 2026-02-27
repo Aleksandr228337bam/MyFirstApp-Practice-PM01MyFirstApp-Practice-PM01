@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Детали задачи"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginBottom="24dp"/>
+
+    <TextView
+        android:id="@+id/tvTaskId"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="ID: "
+        android:textSize="18sp"
+        android:padding="8dp"
+        android:layout_marginBottom="8dp"/>
+
+    <TextView
+        android:id="@+id/tvTaskTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Название: "
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:padding="8dp"
+        android:layout_marginBottom="8dp"/>
+
+    <TextView
+        android:id="@+id/tvTaskDesc"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Описание: "
+        android:textSize="16sp"
+        android:padding="8dp"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Кнопки действий -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="8dp">
+
+        <Button
+            android:id="@+id/btnEdit"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Редактировать"
+            android:layout_marginEnd="4dp"/>
+
+        <Button
+            android:id="@+id/btnDelete"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Удалить"
+            android:layout_marginStart="4dp"/>
+    </LinearLayout>
+
+    <!-- Кнопка "Назад" -->
+    <Button
+        android:id="@+id/btnBack"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Назад"
+        android:layout_marginTop="8dp"/>
+
+</LinearLayout>

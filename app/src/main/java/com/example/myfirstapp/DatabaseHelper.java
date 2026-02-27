@@ -5,26 +5,27 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import com.example.myfirstapp.Task;
-
 public class DatabaseHelper extends SQLiteOpenHelper {
 
-    private static final String DATABASE_NAME = "TasksDB.db";
+    private static final String DATABASE_NAME = "TaskManager.db";
     private static final int DATABASE_VERSION = 1;
+    private static final String TABLE_NAME = "tasks";
 
-    public static final String TABLE_TASKS = "tasks";
-    public static final String COLUMN_ID = "id";
-    public static final String COLUMN_TITLE = "title";
-    public static final String COLUMN_DESC = "description";
+    // Названия столбцов
+    private static final String COLUMN_ID = "id";
+    private static final String COLUMN_TITLE = "title";
+    private static final String COLUMN_DESCRIPTION = "description";
 
-    private static final String CREATE_TABLE =
-            "CREATE TABLE " + TABLE_TASKS + " (" +
-                    COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    COLUMN_TITLE + " TEXT NOT NULL, " +
-                    COLUMN_DESC + " TEXT NOT NULL)";
+    // SQL запрос для создания таблицы
+    private static final String CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + " (" +
+            COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            COLUMN_TITLE + " TEXT NOT NULL, " +
+            COLUMN_DESCRIPTION + " TEXT)";
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -33,83 +34,142 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(CREATE_TABLE);
+        Log.d("DatabaseHelper", "Table created successfully");
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_TASKS);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
         onCreate(db);
     }
 
-    // ========== CRUD МЕТОДЫ ==========
-
-    public boolean addTask(String title, String desc) {
+    // Добавление новой задачи
+    public boolean addTask(String title, String description) {
         SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues cv = new ContentValues();
-        cv.put(COLUMN_TITLE, title);
-        cv.put(COLUMN_DESC, desc);
-        long result = db.insert(TABLE_TASKS, null, cv);
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_TITLE, title);
+        values.put(COLUMN_DESCRIPTION, description);
+
+        long result = db.insert(TABLE_NAME, null, values);
         db.close();
+
         return result != -1;
     }
 
+    // Получение всех задач
     public List<Task> getAllTasks() {
-        List<Task> tasks = new ArrayList<>();
+        List<Task> taskList = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(TABLE_TASKS, null, null, null, null, null, COLUMN_TITLE + " ASC");
-        if (cursor.moveToFirst()) {
+
+        Cursor cursor = db.query(TABLE_NAME,
+                null, null, null, null, null, COLUMN_ID + " DESC");
+
+        if (cursor != null && cursor.moveToFirst()) {
             do {
-                Task task = new Task();
-                task.setId(cursor.getInt(0));
-                task.setTitle(cursor.getString(1));
-                task.setDescription(cursor.getString(2));
-                tasks.add(task);
+                Task task = new Task(
+                        cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID)),
+                        cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TITLE)),
+                        cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DESCRIPTION))
+                );
+                taskList.add(task);
             } while (cursor.moveToNext());
+            cursor.close();
         }
-        cursor.close();
         db.close();
-        return tasks;
+        return taskList;
     }
 
-    public boolean updateTask(Task task) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues cv = new ContentValues();
-        cv.put(COLUMN_TITLE, task.getTitle());
-        cv.put(COLUMN_DESC, task.getDescription());
-        int result = db.update(TABLE_TASKS, cv, COLUMN_ID + "=?", new String[]{String.valueOf(task.getId())});
+    // НОВЫЙ МЕТОД: Получение задачи по ID
+    public Task getTaskById(int id) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Task task = null;
+
+        Cursor cursor = db.query(TABLE_NAME,
+                null,
+                COLUMN_ID + "=?",
+                new String[]{String.valueOf(id)},
+                null, null, null);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            task = new Task(
+                    cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID)),
+                    cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TITLE)),
+                    cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DESCRIPTION))
+            );
+            cursor.close();
+        }
         db.close();
+        return task;
+    }
+
+    // Обновление задачи
+    public boolean updateTask(int id, String title, String description) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_TITLE, title);
+        values.put(COLUMN_DESCRIPTION, description);
+
+        int result = db.update(TABLE_NAME, values, COLUMN_ID + "=?",
+                new String[]{String.valueOf(id)});
+        db.close();
+
         return result > 0;
     }
 
+    // Удаление задачи
     public boolean deleteTask(int id) {
         SQLiteDatabase db = this.getWritableDatabase();
-        int result = db.delete(TABLE_TASKS, COLUMN_ID + "=?", new String[]{String.valueOf(id)});
+        int result = db.delete(TABLE_NAME, COLUMN_ID + "=?",
+                new String[]{String.valueOf(id)});
         db.close();
+
         return result > 0;
     }
 
+    // Поиск задач по названию или описанию
     public List<Task> searchTasks(String query) {
-        List<Task> tasks = new ArrayList<>();
-        try {
-            SQLiteDatabase db = this.getReadableDatabase();
-            String selection = COLUMN_TITLE + " LIKE ?";
-            String[] selectionArgs = {"%" + query + "%"};
-            Cursor cursor = db.query(TABLE_TASKS, null, selection, selectionArgs, null, null, null);
+        List<Task> taskList = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
 
-            if (cursor.moveToFirst()) {
-                do {
-                    Task task = new Task();
-                    task.setId(cursor.getInt(0));
-                    task.setTitle(cursor.getString(1));
-                    task.setDescription(cursor.getString(2));
-                    tasks.add(task);
-                } while (cursor.moveToNext());
-            }
+        String selection = COLUMN_TITLE + " LIKE ? OR " + COLUMN_DESCRIPTION + " LIKE ?";
+        String[] selectionArgs = new String[]{"%" + query + "%", "%" + query + "%"};
+
+        Cursor cursor = db.query(TABLE_NAME, null, selection, selectionArgs,
+                null, null, COLUMN_ID + " DESC");
+
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                Task task = new Task(
+                        cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID)),
+                        cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TITLE)),
+                        cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DESCRIPTION))
+                );
+                taskList.add(task);
+            } while (cursor.moveToNext());
             cursor.close();
-            db.close();
-        } catch (Exception e) {
-            android.util.Log.e("DatabaseHelper", "Search error: " + e.getMessage());
         }
-        return tasks;
+        db.close();
+        return taskList;
+    }
+
+    // Получение количества задач
+    public int getTasksCount() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + TABLE_NAME, null);
+        int count = 0;
+        if (cursor != null && cursor.moveToFirst()) {
+            count = cursor.getInt(0);
+            cursor.close();
+        }
+        db.close();
+        return count;
+    }
+
+    // Удаление всех задач
+    public boolean deleteAllTasks() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        int result = db.delete(TABLE_NAME, null, null);
+        db.close();
+        return result > 0;
     }
 }

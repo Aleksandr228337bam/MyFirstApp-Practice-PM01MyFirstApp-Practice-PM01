@@ -24,6 +24,7 @@
         <activity android:name=".MediaActivity" />
         <activity
             android:name=".MainActivity"
+            android:configChanges="uiMode"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -34,6 +35,12 @@
         <activity android:name=".ProfileActivity" />
         <activity android:name=".CalcActivity" />
         <activity android:name=".SettingsActivity" />
-    </application>
+        <activity
+            android:name=".FullscreenImageActivity"
+            android:theme="@style/Theme.AppCompat.NoActionBar" />
 
+    </application>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 </manifest>

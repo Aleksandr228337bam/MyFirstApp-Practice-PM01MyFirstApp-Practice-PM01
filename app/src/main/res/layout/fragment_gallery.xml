@@ -8,8 +8,8 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Галерея"
-        android:textSize="24sp"
+        android:text="Галерея изображений"
+        android:textSize="20sp"
         android:textStyle="bold"
         android:gravity="center"
         android:padding="16dp"
@@ -17,13 +17,13 @@
         android:layout_marginBottom="8dp"/>
 
     <GridView
-        android:id="@+id/gridView"
+        android:id="@+id/gridViewGallery"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:numColumns="2"
-        android:verticalSpacing="8dp"
-        android:horizontalSpacing="8dp"
+        android:numColumns="3"
+        android:verticalSpacing="4dp"
+        android:horizontalSpacing="4dp"
         android:stretchMode="columnWidth"
-        android:padding="4dp"/>
+        android:gravity="center"/>
 
 </LinearLayout>

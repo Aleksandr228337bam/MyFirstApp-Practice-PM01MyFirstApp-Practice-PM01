@@ -2,6 +2,7 @@ package com.example.myfirstapp;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -10,8 +11,17 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
+
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
+import androidx.appcompat.widget.Toolbar;
+import androidx.navigation.NavController;
+import androidx.navigation.fragment.NavHostFragment;
+import androidx.navigation.ui.NavigationUI;
+
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,41 +33,84 @@ public class MainActivity extends AppCompatActivity {
     List<Task> tasks = new ArrayList<>();
     int selectedTaskId = -1;
 
+    // Для новой навигации
+    private NavController navController;
+    private BottomNavigationView bottomNavigationView;
+    private Toolbar toolbar;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Применяем тему перед установкой контента
+        applyTheme();
+
         super.onCreate(savedInstanceState);
+
+        // Проверяем, используем ли мы новую или старую навигацию
+        boolean useNewNavigation = getSharedPreferences("app_settings", MODE_PRIVATE)
+                .getBoolean("use_new_navigation", false);
+
+        if (useNewNavigation) {
+            // Новая навигация с фрагментами
+            setupNewNavigation();
+        } else {
+            // Старая навигация с Activity
+            setupOldNavigation();
+        }
+    }
+
+    private void applyTheme() {
+        SharedPreferences prefs = getSharedPreferences("settings", MODE_PRIVATE);
+        boolean isDark = prefs.getBoolean("dark_theme", false);
+        if (isDark) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+        }
+    }
+
+    private void setupNewNavigation() {
+        try {
+            setContentView(R.layout.activity_main_nav);
+
+            // Инициализируем Toolbar
+            toolbar = findViewById(R.id.toolbar);
+            setSupportActionBar(toolbar);
+
+            // Проверяем, что NavHostFragment существует
+            NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager()
+                    .findFragmentById(R.id.nav_host_fragment);
+
+            if (navHostFragment == null) {
+                Toast.makeText(this, "Ошибка: NavHostFragment не найден", Toast.LENGTH_LONG).show();
+                return;
+            }
+
+            navController = navHostFragment.getNavController();
+
+            // Проверяем, что BottomNavigationView существует
+            bottomNavigationView = findViewById(R.id.bottomNavigationView);
+            if (bottomNavigationView == null) {
+                Toast.makeText(this, "Ошибка: BottomNavigationView не найден", Toast.LENGTH_LONG).show();
+                return;
+            }
+
+            // Связываем BottomNavigationView с NavController
+            NavigationUI.setupWithNavController(bottomNavigationView, navController);
+
+            // Связываем Toolbar с NavController (для отображения заголовков и кнопки "Назад")
+            NavigationUI.setupActionBarWithNavController(this, navController);
+
+        } catch (Exception e) {
+            Toast.makeText(this, "Ошибка инициализации: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            e.printStackTrace();
+        }
+    }
+
+    private void setupOldNavigation() {
         setContentView(R.layout.activity_main);
 
-        // НАВИГАЦИЯ lvScreens
-        @SuppressLint({"MissingInflatedId", "LocalSuppress"})
-        ListView lvScreens = findViewById(R.id.lvScreens);
-        String[] screens = {
-                "Открыть профиль",
-                "Открыть экран с расчётом",
-                "Открыть экран настроек",
-                "Каталог картинок",
-                "Медиа" // Добавлен новый пункт
-        };
-        ArrayAdapter<String> navAdapter = new ArrayAdapter<>(
-                this, android.R.layout.simple_list_item_1, screens);
-        lvScreens.setAdapter(navAdapter);
-
-        lvScreens.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if (position == 0) {
-                    startActivity(new Intent(MainActivity.this, ProfileActivity.class));
-                } else if (position == 1) {
-                    startActivity(new Intent(MainActivity.this, CalcActivity.class));
-                } else if (position == 2) {
-                    startActivity(new Intent(MainActivity.this, SettingsActivity.class));
-                } else if (position == 3) {
-                    startActivity(new Intent(MainActivity.this, GalleryActivity.class));
-                } else if (position == 4) { // Новый пункт "Медиа"
-                    startActivity(new Intent(MainActivity.this, MediaActivity.class));
-                }
-            }
-        });
+        // Инициализация старой навигации
+        initOldNavigation();
 
         // ИНИЦИАЛИЗАЦИЯ SQLite
         dbHelper = new DatabaseHelper(this);
@@ -122,6 +175,56 @@ public class MainActivity extends AppCompatActivity {
         refreshTasksList();
     }
 
+    private void initOldNavigation() {
+        @SuppressLint({"MissingInflatedId", "LocalSuppress"})
+        ListView lvScreens = findViewById(R.id.lvScreens);
+        String[] screens = {
+                "Открыть профиль",
+                "Открыть экран с расчётом",
+                "Открыть экран настроек",
+                "Каталог картинок",
+                "Медиа",
+                "Переключиться на новую навигацию"
+        };
+
+        ArrayAdapter<String> navAdapter = new ArrayAdapter<>(
+                this, android.R.layout.simple_list_item_1, screens);
+        lvScreens.setAdapter(navAdapter);
+
+        lvScreens.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                switch (position) {
+                    case 0:
+                        startActivity(new Intent(MainActivity.this, ProfileActivity.class));
+                        break;
+                    case 1:
+                        startActivity(new Intent(MainActivity.this, CalcActivity.class));
+                        break;
+                    case 2:
+                        startActivity(new Intent(MainActivity.this, SettingsActivity.class));
+                        break;
+                    case 3:
+                        startActivity(new Intent(MainActivity.this, GalleryActivity.class));
+                        break;
+                    case 4:
+                        startActivity(new Intent(MainActivity.this, MediaActivity.class));
+                        break;
+                    case 5:
+                        // Переключение на новую навигацию
+                        getSharedPreferences("app_settings", MODE_PRIVATE)
+                                .edit()
+                                .putBoolean("use_new_navigation", true)
+                                .apply();
+                        Toast.makeText(MainActivity.this,
+                                "🔄 Перезапустите приложение для применения новой навигации",
+                                Toast.LENGTH_LONG).show();
+                        break;
+                }
+            }
+        });
+    }
+
     private void addTask() {
         try {
             EditText etTitle = findViewById(R.id.etTitle);
@@ -179,5 +282,14 @@ public class MainActivity extends AppCompatActivity {
             refreshTasksList();
             Toast.makeText(this, "🔄 Список обновлен!", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    // Добавляем поддержку Up button в новой навигации
+    @Override
+    public boolean onSupportNavigateUp() {
+        if (navController != null) {
+            return navController.navigateUp() || super.onSupportNavigateUp();
+        }
+        return super.onSupportNavigateUp();
     }
 }

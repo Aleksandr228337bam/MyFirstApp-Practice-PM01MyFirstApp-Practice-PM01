@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Настройки приложения"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginBottom="24dp"/>
+
+    <!-- Переключатель темы -->
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/switchTheme"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Тёмная тема"
+        android:textSize="18sp"
+        android:layout_marginBottom="24dp"/>
+
+    <!-- Настройка размера шрифта -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Размер шрифта"
+        android:textSize="18sp"
+        android:layout_marginBottom="8dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="10"
+            android:textSize="16sp"
+            android:layout_marginEnd="8dp"/>
+
+        <SeekBar
+            android:id="@+id/seekFont"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:max="30"
+            android:progress="16"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="30"
+            android:textSize="16sp"
+            android:layout_marginStart="8dp"/>
+    </LinearLayout>
+
+    <!-- Превью размера шрифта -->
+    <TextView
+        android:id="@+id/tvPreview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Пример текста"
+        android:textSize="16sp"
+        android:gravity="center"
+        android:layout_marginTop="32dp"
+        android:padding="16dp"
+        android:background="@android:drawable/editbox_background"/>
+
+    <!-- Кнопка сброса настроек -->
+    <Button
+        android:id="@+id/btnResetSettings"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Сбросить настройки"
+        android:layout_marginTop="24dp"/>
+
+</LinearLayout>
